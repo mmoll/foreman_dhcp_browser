@@ -9,6 +9,19 @@ class DhcpController < ApplicationController
     #hack hack hack, need to fix foreman core to validate on create/save instead of init
     @record = Net::DHCP::Record.new :proxy   => @subnet.dhcp_proxy, :hostname => 'dummy', :mac => 'aa:bb:cc:dd:ee:ff',
                                     :network => @subnet.network, :ip => '1.2.3.4'
+    @record.hostname = @record.mac = @record.ip = nil
+  end
+
+  def create
+    @record = Net::DHCP::Record.new(params[:net_dhcp_record])
+    if @record.create
+      process_success
+    else
+      process_error
+    end
+  rescue ProxyAPI::ProxyException => e
+    error_msg = (e.try(:wrapped_exception).try(:response) || e).to_s
+    process_error :error_msg => error_msg
   end
 
   def show
@@ -18,7 +31,15 @@ class DhcpController < ApplicationController
   end
 
   def update
-    #TODO
+    @record = Net::DHCP::Record.new(params[:net_dhcp_record])
+    if @record.create
+      process_success
+    else
+      process_error
+    end
+  rescue ProxyAPI::ProxyException => e
+    error_msg = (e.try(:wrapped_exception).try(:response) || e).to_s
+    process_error :error_msg => error_msg
   end
 
   def destroy
